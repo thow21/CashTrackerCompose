@@ -49,7 +49,8 @@ const val DB_NAME = "Database"
 
 class MainActivity : ComponentActivity() {
 
-    val data = mutableListOf<Entry>()
+    private val data = mutableListOf<Entry>()
+    private var defEntry: Entry? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -155,16 +156,15 @@ class MainActivity : ComponentActivity() {
             composable(route = Screen.MainScreen.route) {
                 MainScreen(navController = navController)
             }
-            composable(
-                route = Screen.DetailScreen.route
-
-            ) {
+            composable(route = Screen.DetailScreen.route) {
                 DetailScreen(navController = navController)
             }
             composable(route = Screen.AddScreen.route) {
                 AddScreen(navController = navController)
             }
-
+            composable(route = Screen.EntryDetail.route) {
+                EntryDetail(navController = navController)
+            }
         }
     }
 
@@ -195,6 +195,8 @@ class MainActivity : ComponentActivity() {
             Button(
                 onClick = {
                     navController.navigate(Screen.DetailScreen.route)
+                    data.clear()
+                    getData()
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray),
                 modifier = Modifier
@@ -211,6 +213,16 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun DetailScreen(navController: NavController) {
+
+        LazyColumn {
+            items(data) { entry ->
+                ListEntry(entry, navController)
+            }
+        }
+
+    }
+
+    private fun getData() {
         val dataB = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null)
         //dataB.execSQL("CREATE TABLE IF NOT EXISTS entry(Place TEXT, Product TEXT, Time TEXT, Cost REAL);")
 
@@ -237,15 +249,6 @@ class MainActivity : ComponentActivity() {
         resultSet.close()
 
         dataB.close()
-        //Text(text = "Detail")
-
-
-        LazyColumn {
-            items(data) { entry ->
-                ListEntry(entry, navController)
-            }
-        }
-
     }
 
     @Composable
@@ -258,17 +261,47 @@ class MainActivity : ComponentActivity() {
                     Toast
                         .makeText(this, entry.price.toString(), Toast.LENGTH_SHORT)
                         .show()
+                    defEntry = entry
                     navController.navigate(Screen.EntryDetail.route)
+
                 }
         ) {
             Text(text = entry.tag1)
-            Spacer(modifier = Modifier.fillMaxSize(0.6f))
+            Spacer(modifier = Modifier.fillMaxWidth(0.6f))
             Text(text = entry.date)
         }
     }
 
     @Composable
-    private fun EntryDetail(navController: NavController) {
-        Text(text = "Entry detail")
+    fun EntryDetail(navController: NavController) {
+        Column() {
+            Row {
+                Text(text = defEntry!!.tag1)
+                Text(text = defEntry!!.tag2)
+            }
+            Row() {
+                Text(text = defEntry!!.price.toString())
+                Text(text = defEntry!!.date)
+            }
+            Text(text = defEntry!!.notes)
+
+            Button(onClick = {
+                val dataB = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null)
+                val place = defEntry!!.tag1
+                val product = defEntry!!.tag2
+                val date = defEntry!!.date
+                val notes = defEntry!!.notes
+                val price = defEntry!!.price
+                dataB.execSQL("DELETE FROM entry WHERE Place = '$place' AND Product = '$product' AND Notes = '$notes' AND Time = '$date' AND Cost = '$price'")
+                data.clear()
+                getData()
+                navController.navigate(Screen.DetailScreen.route)
+
+            }) {
+                Text(text = "Delete")
+            }
+        }
+
+
     }
 }
