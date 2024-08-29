@@ -1,8 +1,8 @@
 package com.example.cashtrackercompose
 
 sealed class Screen(val route : String) {
-    object MainScreen : Screen("main_screen")
-    object DetailScreen : Screen("detail_screen")
-    object AddScreen : Screen("add_screen")
-    object EntryDetail : Screen("entry_detail")
+    data object MainScreen : Screen("main_screen")
+    data object DetailScreen : Screen("detail_screen")
+    data object AddScreen : Screen("add_screen")
+    data object EntryDetail : Screen("entry_detail")
 }
